@@ -10,7 +10,6 @@ export default function NavBar2() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  console.log(location)
   return (
     <div className="flex h-screen w-full bg-gradient-to-b ">
       <aside

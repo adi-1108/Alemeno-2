@@ -1,17 +1,20 @@
-
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { supabase } from '../supabaseClient';
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { supabase } from "../supabaseClient";
 // or any API endpoint
 
-export const fetchCourses = createAsyncThunk('courses/fetchCourses', async () => {
-  const { data, error } = await supabase.from('courses').select('*');
-  if (error) throw new Error(error.message);
-  return data;
-});
+export const fetchCourses = createAsyncThunk(
+  "courses/fetchCourses",
+  async () => {
+    const { data, error } = await supabase.from("courses").select("*");
+    if (error) throw new Error(error.message);
+    return data;
+  }
+);
 
 const courseSlice = createSlice({
-  name: 'courses',
+  name: "courses",
   initialState: {
+    user: null,
     list: [],
     enrolled: [],
     loading: false,
@@ -21,8 +24,16 @@ const courseSlice = createSlice({
       state.enrolled.push(action.payload);
     },
     completeCourse: (state, action) => {
-      const course = state.enrolled.find(c => c.id === action.payload);
+      const course = state.enrolled.find((c) => c.id === action.payload);
       if (course) course.completed = true;
+    },
+    login: (state, action) => {
+      state.isAuthenticated = true;
+      state.user = action.payload;
+    },
+    logout: (state, action) => {
+      state.isAuthenticated = false;
+      state.user = null;
     },
   },
   extraReducers: (builder) => {
@@ -40,5 +51,6 @@ const courseSlice = createSlice({
   },
 });
 
-export const { enrollCourse, completeCourse } = courseSlice.actions;
+export const { enrollCourse, completeCourse, login, logout } =
+  courseSlice.actions;
 export default courseSlice.reducer;

@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import { UserCircleIcon } from "@heroicons/react/20/solid";
-
 import Loader from "./Loader";
 import clsx from "clsx";
-
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./ui/accordion";
 import { supabase } from "../supabaseClient";
+import { Accordion, AccordionContent, AccordionTrigger } from "./ui/accordion";
+import { AccordionItem } from "./ui/accordion";
 
 const CourseDetails = () => {
   const { id } = useParams();
   const courseId = id.slice(0, -1);
-  console.log(courseId)
   const [courseDetails, setCourseDetails] = useState({});
   const [loading, setLoading] = useState(true);
+  const preRequisites = courseDetails?.prerequisites;
 
+  // Fetch course details
   const fetchCourseDetails = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -29,11 +23,99 @@ const CourseDetails = () => {
       .eq("courseid", courseId)
       .single();
 
-    setCourseDetails(data);
+    if (error) {
+      console.error("Error fetching course details:", error);
+    } else {
+      setCourseDetails(data);
+    }
     setLoading(false);
   };
 
-  const preRequisites = courseDetails.prerequisites;
+  // Enroll a student directly within the component
+  const handleEnrollClick = async () => {
+    try {
+      const studentEmail = prompt("Enter your email to enroll:");
+      if (!studentEmail) {
+        alert("Email is required to enroll.");
+        return;
+      }
+
+      // Fetch the student by email
+      let { data: student, error: fetchError } = await supabase
+        .from("students")
+        .select("*")
+        .eq("email", studentEmail)
+        .single();
+
+      // If the student does not exist, prompt to add the student
+      if (!student) {
+        const name = prompt(
+          "Student does not exist. Enter student name to add:"
+        );
+        if (!name) {
+          alert("Student name is required.");
+          return;
+        }
+
+        // Add the new student
+        const { data: newStudent, error: addError } = await supabase
+          .from("students")
+          .insert([
+            { name, email: studentEmail, enrolledcourses: [], progress: 0 },
+          ])
+          .single();
+
+        if (addError) {
+          throw new Error(addError.message);
+        }
+        student = newStudent;
+        alert("Student added successfully.");
+      }
+
+      // Update enrolled courses for the student
+      const updatedCourses = student.enrolledcourses.includes(courseId)
+        ? student.enrolledcourses
+        : [...student.enrolledcourses, courseId];
+
+      const { error: updateError } = await supabase
+        .from("students")
+        .update({ enrolledcourses: updatedCourses })
+        .eq("studentid", student.studentid);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      setTimeout(async () => {
+        try {
+          // Enroll the student in the course
+          const { error: enrollError } = await supabase
+            .from("enrollments")
+            .insert([
+              {
+                studentid: student.studentid,
+                courseid: courseId,
+                status: "Enrolled",
+                progress: 0,
+                duedate: new Date().toISOString(),
+              },
+            ]);
+
+          if (enrollError) {
+            throw new Error(enrollError.message);
+          }
+
+          alert("Student enrolled successfully!");
+        } catch (error) {
+          console.error("Enrollment error after delay:", error.message);
+          alert("Failed to enroll student after delay.");
+        }
+      }, 3000); // 3000 milliseconds = 3 seconds delay
+    } catch (error) {
+      console.error("Enrollment error:", error.message);
+      alert("Failed to enroll student.");
+    }
+  };
 
   useEffect(() => {
     fetchCourseDetails();
@@ -45,7 +127,6 @@ const CourseDetails = () => {
 
   return (
     <div className="flex min-h-[100vh] flex-col overflow-hidden">
-      {/* Prevent scrolling on the entire page */}
       <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-blue-600 to-slate-200 px-6 py-8">
         <h1 className="text-3xl font-bold tracking-tighter text-white sm:text-5xl xl:text-6xl/none">
           {courseDetails?.coursename}
@@ -59,6 +140,7 @@ const CourseDetails = () => {
 
         <div className="flex items-center justify-start gap-4">
           <button
+            onClick={handleEnrollClick} // Handle enrollment directly here
             disabled={courseDetails.enrollmentstatus === "Closed"}
             className={clsx(
               "rounded-xl border-2 border-slate-500/40  px-4 py-2 text-2xl font-medium text-white shadow-xl transition-all hover:scale-110",
@@ -81,6 +163,8 @@ const CourseDetails = () => {
           </div>
         </div>
       </section>
+      {/* Rest of the component */}
+
       <section className="scrollbar-none mt-4 flex max-h-[calc(100vh-20rem)] flex-col gap-4 overflow-y-auto rounded-3xl bg-gradient-to-r from-slate-200 to-slate-50 px-6 py-8">
         <div className="sticky top-0 p-4 backdrop-blur-lg">
           <h1 className="text-lg font-bold text-zinc-900 sm:text-2xl xl:text-5xl/none">
