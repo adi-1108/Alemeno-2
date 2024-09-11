@@ -1,20 +1,27 @@
-Clone the Project
 
-bash
-Copy code
-git clone https://github.com/your-username/your-repo.git
-Open the Project in VS Code
+# Alemeno
 
-bash
-Copy code
-code your-repo
-Install Dependencies
+React Internship assignment project
 
-bash
-Copy code
-npm install
-Run on Localhost
 
-bash
-Copy code
-npm run dev
+
+
+## Deployment
+
+To deploy this project run
+
+```bash
+  git clone https://github.com/adi-1108/Alemeno-2.git
+```
+To install all the dependencies
+```bash
+    npm install
+```
+To run the website in localHost
+```bash
+    npm run dev
+```
+
+
+
+
