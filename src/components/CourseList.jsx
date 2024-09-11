@@ -20,7 +20,7 @@ const CourseList = () => {
   );
 
   return (
-    <div className="p-4">
+    <div className="p-4 flex flex-col gap-4 items-center">
       <input
         type="text"
         placeholder="Search by course name or instructor"
@@ -31,7 +31,7 @@ const CourseList = () => {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <ul className="grid grid-cols-3">
+        <ul className="grid grid-cols-3 gap-8">
           {filteredCourses.map((course) => (
             <li key={course.courseid} className="mb-2">
               <CourseCard key={course.courseid} course={course} />

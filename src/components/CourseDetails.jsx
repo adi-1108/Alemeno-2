@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { supabase } from "../supabaseClient";
 import { Accordion, AccordionContent, AccordionTrigger } from "./ui/accordion";
 import { AccordionItem } from "./ui/accordion";
+import { useSelector } from "react-redux";
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -13,6 +14,7 @@ const CourseDetails = () => {
   const [courseDetails, setCourseDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const preRequisites = courseDetails?.prerequisites;
+  const user = useSelector((state) => state.user.user);
 
   // Fetch course details
   const fetchCourseDetails = async () => {
@@ -31,89 +33,19 @@ const CourseDetails = () => {
     setLoading(false);
   };
 
-  // Enroll a student directly within the component
-  const handleEnrollClick = async () => {
-    try {
-      const studentEmail = prompt("Enter your email to enroll:");
-      if (!studentEmail) {
-        alert("Email is required to enroll.");
-        return;
-      }
+  const enrollStudent = async () => {
+    const { data, error } = await supabase.from("enrollments").insert([
+      {
+        studentid: user.studentid,
+        courseid: courseId,
+        status: courseDetails.enrollmentstatus,
+      },
+    ]);
 
-      // Fetch the student by email
-      let { data: student, error: fetchError } = await supabase
-        .from("students")
-        .select("*")
-        .eq("email", studentEmail)
-        .single();
-
-      // If the student does not exist, prompt to add the student
-      if (!student) {
-        const name = prompt(
-          "Student does not exist. Enter student name to add:"
-        );
-        if (!name) {
-          alert("Student name is required.");
-          return;
-        }
-
-        // Add the new student
-        const { data: newStudent, error: addError } = await supabase
-          .from("students")
-          .insert([
-            { name, email: studentEmail, enrolledcourses: [], progress: 0 },
-          ])
-          .single();
-
-        if (addError) {
-          throw new Error(addError.message);
-        }
-        student = newStudent;
-        alert("Student added successfully.");
-      }
-
-      // Update enrolled courses for the student
-      const updatedCourses = student.enrolledcourses.includes(courseId)
-        ? student.enrolledcourses
-        : [...student.enrolledcourses, courseId];
-
-      const { error: updateError } = await supabase
-        .from("students")
-        .update({ enrolledcourses: updatedCourses })
-        .eq("studentid", student.studentid);
-
-      if (updateError) {
-        throw new Error(updateError.message);
-      }
-
-      setTimeout(async () => {
-        try {
-          // Enroll the student in the course
-          const { error: enrollError } = await supabase
-            .from("enrollments")
-            .insert([
-              {
-                studentid: student.studentid,
-                courseid: courseId,
-                status: "Enrolled",
-                progress: 0,
-                duedate: new Date().toISOString(),
-              },
-            ]);
-
-          if (enrollError) {
-            throw new Error(enrollError.message);
-          }
-
-          alert("Student enrolled successfully!");
-        } catch (error) {
-          console.error("Enrollment error after delay:", error.message);
-          alert("Failed to enroll student after delay.");
-        }
-      }, 3000); // 3000 milliseconds = 3 seconds delay
-    } catch (error) {
-      console.error("Enrollment error:", error.message);
-      alert("Failed to enroll student.");
+    if (error) {
+      console.error("Error enrolling student:", error);
+    } else {
+      console.log("Student enrolled successfully");
     }
   };
 

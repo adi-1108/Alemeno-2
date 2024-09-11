@@ -1,6 +1,6 @@
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useDispatch, useSelector } from "react-redux";
-import { login, logout } from "@/store/courseSlice";
+import { login, logout } from "@/store/userSlice";
 import { auth } from "@/firebase";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -20,13 +20,14 @@ const Signin = () => {
 
   const handleSignIn = async () => {
     setLoading(true);
+
     await signInWithEmailAndPassword(auth, email, password)
       .then((user) => {
         const userDetails = user.user;
         const _user = {
           displayName: auth.currentUser.displayName,
           email: userDetails.email,
-          uid: userDetails.uid,
+          studentid: userDetails.uid,
         };
         navigate("/");
         dispatch(login(_user));

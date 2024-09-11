@@ -1,15 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, UserIcon } from "@heroicons/react/24/solid";
 import { RectangleGroupIcon } from "@heroicons/react/24/solid";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { clsx } from "clsx";
+import { useDispatch, useSelector } from "react-redux";
+import { supabase } from "@/supabaseClient";
+import { auth } from "@/firebase";
+import { login, logout } from "@/store/userSlice";
 
 export default function NavBar2() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    auth.signOut().then(() => console.log("User Signed out"));
+    dispatch(logout());
+    navigate("/signin");
+  };
+
+  useEffect(() => {
+    if (!user.user) navigate("/signin");
+    const getStudentid = async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("studentid")
+        .eq("email", user.user.email)
+        .single();
+
+      return data.studentid;
+    };
+
+    const setStudentid = async () => {
+      const studentid = await getStudentid();
+
+      const updatedUser = { ...user.user, studentid: studentid };
+      dispatch(login(updatedUser));
+    };
+
+    setStudentid();
+    // const updatedUser = { ...user.user, studentid: studentid };
+    // dispatch(login(updatedUser));
+  }, []);
+
   return (
     <div className="flex h-screen w-full bg-gradient-to-b ">
       <aside
@@ -21,23 +58,40 @@ export default function NavBar2() {
         data-collapsed={isCollapsed}
       >
         <div
-          className={`flex items-center justify-between py-4 ${isCollapsed ? "gap-1" : "gap-10"}`}
+          className={`flex flex-col items-center justify-between py-4 ${
+            isCollapsed ? "gap-1" : "gap-10"
+          }`}
         >
           <Link href="" className="flex items-center gap-2" prefetch={false}>
             <span
-              className={`text-2xl font-bold ${isCollapsed ? "hidden" : "block"}`}
+              className={`text-2xl font-bold ${
+                isCollapsed ? "hidden" : "block"
+              }`}
             >
               SkillSphere
             </span>
           </Link>
-
+          <div>
+            <h1
+              className={clsx(
+                "font-bold text-lg px-4 py-2 rounded-lg bg-blue-200 shadow-xl",
+                {
+                  ["hidden"]: isCollapsed,
+                }
+              )}
+            >
+              Hello {user.user.displayName.split(" ").at(0)}
+            </h1>
+          </div>
           <Button
             size="icon"
             className="rounded-md bg-slate-700 p-1 transition-colors hover:scale-110"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             <ChevronRightIcon
-              className={`h-5 w-5 text-white transition-transform ${isCollapsed ? "" : "rotate-180"}`}
+              className={`h-5 w-5 text-white transition-transform ${
+                isCollapsed ? "" : "rotate-180"
+              }`}
             />
           </Button>
         </div>
@@ -81,6 +135,18 @@ export default function NavBar2() {
             <span className={isCollapsed ? "hidden" : "block"}>Dashboard</span>
           </Link>
         </nav>
+
+        <button
+          onClick={handleLogout}
+          className={clsx(
+            "px-4 py-2 bg-red-500 hover:scale-110 transition-all text-white font-bold shadow-xl rounded-xl",
+            {
+              ["hidden"]: isCollapsed,
+            }
+          )}
+        >
+          Logout
+        </button>
       </aside>
 
       <main className="min-h-[calc(100vh-10%)] flex-1 overflow-hidden p-6">

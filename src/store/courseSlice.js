@@ -14,7 +14,6 @@ export const fetchCourses = createAsyncThunk(
 const courseSlice = createSlice({
   name: "courses",
   initialState: {
-    user: null,
     list: [],
     enrolled: [],
     loading: false,
@@ -26,14 +25,6 @@ const courseSlice = createSlice({
     completeCourse: (state, action) => {
       const course = state.enrolled.find((c) => c.id === action.payload);
       if (course) course.completed = true;
-    },
-    login: (state, action) => {
-      state.isAuthenticated = true;
-      state.user = action.payload;
-    },
-    logout: (state, action) => {
-      state.isAuthenticated = false;
-      state.user = null;
     },
   },
   extraReducers: (builder) => {
@@ -51,6 +42,5 @@ const courseSlice = createSlice({
   },
 });
 
-export const { enrollCourse, completeCourse, login, logout } =
-  courseSlice.actions;
+export const { enrollCourse, completeCourse } = courseSlice.actions;
 export default courseSlice.reducer;

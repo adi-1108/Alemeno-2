@@ -7,7 +7,7 @@ import { updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { supabase } from "@/supabaseClient";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -25,6 +25,18 @@ const Signup = () => {
       await updateProfile(auth.currentUser, {
         displayName: fname + " " + lname,
       });
+
+      const { data: newStudent, error: addError } = await supabase
+        .from("students")
+        .insert([
+          {
+            name: fname + " " + lname,
+            email: email,
+            enrolledcourses: [],
+            progress: 0,
+          },
+        ])
+        .single();
 
       navigate("/signin");
     } catch (error) {
