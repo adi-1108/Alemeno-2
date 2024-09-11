@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   BrowserRouter,
+  redirect,
 } from "react-router-dom";
 import CourseList from "./components/CourseList";
 import CourseDetails from "./components/CourseDetails";
@@ -14,11 +15,12 @@ import Signup from "./pages/SignUp";
 import { useSelector } from "react-redux";
 
 function App() {
-  // const user = useSelector((state) => state.user);
-
-  // useEffect(() => {
-  //   if (!user.user) redirect("/signin");
-  // }, []);
+  const user = useSelector((state) => state.user);
+  console.log(user.user === null)
+ 
+  useEffect(() => {
+    if (user.user === null) redirect("/signin");
+  }, []);
   return (
     <div className="bg-gradient-to-br from-blue-200 to-blue-400">
       <BrowserRouter>

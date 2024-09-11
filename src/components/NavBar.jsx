@@ -24,7 +24,7 @@ export default function NavBar2() {
   };
 
   useEffect(() => {
-    if (!user.user) navigate("/signin");
+    if (user.user === null) navigate("/signin");
     const getStudentid = async () => {
       const { data, error } = await supabase
         .from("students")
@@ -80,7 +80,7 @@ export default function NavBar2() {
                 }
               )}
             >
-              Hello {user.user.displayName.split(" ").at(0)}
+              Hello {user?.user?.displayName.split(" ").at(0)}
             </h1>
           </div>
           <Button

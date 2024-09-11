@@ -2,17 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCourses, fetchEnrolledCourses } from "../store/courseSlice";
 import CourseCard from "./CourseCard";
+import { useNavigate } from "react-router-dom";
 
 const CourseList = () => {
   const dispatch = useDispatch();
   const { list, loading } = useSelector((state) => state.courses);
   const [search, setSearch] = useState("");
   const user = useSelector((state) => state.user.user);
-
+  const navigate = useNavigate();
   useEffect(() => {
+    if (!user) navigate("/signin");
     dispatch(fetchCourses());
     dispatch(fetchEnrolledCourses(user.studentid));
-  }, [dispatch, user.studentid]);
+  }, [dispatch, user?.studentid]);
 
   const filteredCourses = list.filter(
     (course) =>
