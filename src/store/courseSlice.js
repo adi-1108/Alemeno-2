@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "../supabaseClient";
-// or any API endpoint
 
+// Fetch courses from the courses table
 export const fetchCourses = createAsyncThunk(
   "courses/fetchCourses",
   async () => {
@@ -11,11 +11,26 @@ export const fetchCourses = createAsyncThunk(
   }
 );
 
+// Fetch enrolled courses for a specific student
+export const fetchEnrolledCourses = createAsyncThunk(
+  "courses/fetchEnrolledCourses",
+  async (studentId) => {
+    const { data, error } = await supabase
+      .from("students")
+      .select("enrolledcourses")
+      .eq("studentid", studentId)
+      .single(); // Fetch a single row
+
+    if (error) throw new Error(error.message);
+    return data.enrolledcourses || []; // Default to empty array if no data
+  }
+);
+
 const courseSlice = createSlice({
   name: "courses",
   initialState: {
     list: [],
-    enrolled: [],
+    enrolled: [], // This will be updated with fetched enrolled courses
     loading: false,
   },
   reducers: {
@@ -37,6 +52,16 @@ const courseSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchCourses.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(fetchEnrolledCourses.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchEnrolledCourses.fulfilled, (state, action) => {
+        state.enrolled = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchEnrolledCourses.rejected, (state) => {
         state.loading = false;
       });
   },
