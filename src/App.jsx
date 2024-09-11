@@ -16,7 +16,6 @@ import { useSelector } from "react-redux";
 
 function App() {
   const user = useSelector((state) => state.user);
-  console.log(user.user === null)
  
   useEffect(() => {
     if (user.user === null) redirect("/signin");
